@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocuSign Pro - Enterprise Identity & Signature Portal</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+              950: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+
+  <!-- Top Enterprise Status Banner -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 py-3.5 flex items-center justify-between text-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-md shadow-blue-500/20">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      </div>
+      <div>
+        <span class="font-bold text-sm tracking-tight text-white flex items-center gap-1.5">
+          DocuSign <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Enterprise Pro</span>
+        </span>
+      </div>
+    </div>
+    
+    <div class="hidden sm:flex items-center gap-4 text-slate-400 text-[11px]">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span class="text-slate-300 font-medium">Aadhaar & Govt KYC Verified</span>
+      </div>
+      <span class="text-slate-700">&bull;</span>
+      <div class="flex items-center gap-1">
+        <span class="text-slate-400">ESIGN & UETA Certified</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Login & Registration Container -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
+    <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-sm">
+      
+      <!-- Left Column: Authentication Form (7 cols) -->
+      <div class="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between">
+        <div>
+          <!-- Title & Prompt -->
+          <div class="mb-6">
+            <span class="text-[11px] font-bold uppercase tracking-widest text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20 inline-block mb-2">
+              Identity Verification Portal
+            </span>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              Sign In to Your Dashboard
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1.5">
+              Access your documents, legal certificates, and multi-party signing envelopes.
+            </p>
+          </div>
+
+          <!-- Mode Tabs -->
+          <div class="flex border-b border-slate-800 mb-6 bg-slate-950/60 p-1 rounded-xl">
+            <button id="tab-login" class="flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all">
+              Sign In
+            </button>
+            <button id="tab-register" class="flex-1 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-lg transition-all">
+              Create Account (Govt Verified)
+            </button>
+          </div>
+
+          <!-- Error / Status Box -->
+          <div id="auth-alert" class="hidden p-3.5 rounded-xl mb-4 text-xs font-medium"></div>
+
+          <!-- ================= SIGN IN FORM ================= -->
+          <form id="login-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Corporate / Legal Email</label>
+              <div class="relative">
+                <input type="email" id="login-email" required placeholder="name@company.com" value="sowmay@example.com" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">✉️</span>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between items-center mb-1.5">
+                <label class="block text-xs font-semibold text-slate-300">Password</label>
+                <span class="text-[11px] text-slate-400">Default demo: <code class="text-blue-400 font-mono">password123</code></span>
+              </div>
+              <div class="relative">
+                <input type="password" id="login-password" required value="password123" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:outline-none transition-all font-mono" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">🔑</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <input type="checkbox" id="login-terms" checked class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer bg-slate-950 border-slate-700" />
+              <label for="login-terms" class="text-xs text-slate-400 cursor-pointer select-none">
+                I accept the <a href="#" id="view-terms-link" class="text-blue-400 hover:text-blue-300 underline font-medium">Privacy & Electronic Signature Terms</a>
+              </label>
+            </div>
+
+            <button type="submit" id="btn-login-submit" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 group">
+              <span>Sign In with Verified Identity</span>
+              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </form>
+
+          <!-- ================= CREATE ACCOUNT FORM (UNIFIED AADHAAR & EMAIL OTP VERIFICATION) ================= -->
+          <form id="register-form" class="space-y-4 hidden">
+            
+            <!-- Document Method Selector -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="block text-xs font-bold text-slate-300">
+                  1. Government Document for Name Verification
+                </label>
+                <span class="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/20 font-semibold">Mandatory KYC</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-xs">
+                <button type="button" class="kyc-method-btn p-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-blue-300 font-bold text-center transition-all flex flex-col items-center gap-1 shadow-sm" data-type="aadhaar">
+                  <span class="text-base">🪪</span>
+                  <span>Aadhaar Card</span>
+                </button>
+                <button type="button" class="kyc-method-btn p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-medium hover:text-slate-200 text-center transition-all flex flex-col items-center gap-1" data-type="pan">
+                  <span class="text-base">💳</span>
+                  <span>PAN Card</span>
+                </button>
+                <button type="button" class="kyc-method-btn p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-medium hover:text-slate-200 text-center transition-all flex flex-col items-center gap-1" data-type="email_otp">
+                  <span class="text-base">✉️</span>
+                  <span>Email ID</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Document ID Input Row -->
+            <div>
+              <label id="kyc-input-label" class="block text-xs font-semibold text-slate-300 mb-1.5">12-Digit Aadhaar Card Number</label>
+              <div class="relative">
+                <input type="text" id="reg-doc-id" required placeholder="e.g. 5489 1234 5678" value="5489 1234 5678" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all font-mono" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">🪪</span>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-1" id="kyc-input-hint">Your legal identity and signature rights are anchored to this UIDAI record.</p>
+            </div>
+
+            <!-- Full Legal Name -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Full Legal Name (as on Document)</label>
+              <div class="relative">
+                <input type="text" id="reg-name" required placeholder="e.g. Rohan Sharma" value="Rohan Sharma" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">👤</span>
+              </div>
+            </div>
+
+            <!-- Email Address -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Email Address (OTP will be dispatched here)</label>
+              <div class="relative">
+                <input type="email" id="reg-email" required placeholder="name@company.com" value="rohan.sharma@example.com" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">✉️</span>
+              </div>
+            </div>
+
+            <!-- Password -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
+              <div class="relative">
+                <input type="password" id="reg-password" required placeholder="At least 6 characters" value="password123" class="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-700 hover:border-slate-600 rounded-xl text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono" />
+                <span class="absolute left-3.5 top-3 text-slate-400 text-xs">🔑</span>
+              </div>
+            </div>
+
+            <!-- 1-Click Demo Fill -->
+            <div class="pt-0.5">
+              <button type="button" id="btn-quick-fill-demo" class="w-full py-2 px-3 bg-slate-950 hover:bg-slate-800/80 border border-dashed border-blue-500/40 rounded-xl text-xs text-blue-400 font-semibold flex items-center justify-center gap-1.5 transition-all">
+                <span>⚡ Auto-Fill Aadhaar Demo User (Rohan Sharma • 5489 1234 5678)</span>
+              </button>
+            </div>
+
+            <!-- Terms -->
+            <div class="flex items-center gap-2 pt-1">
+              <input type="checkbox" id="reg-terms" required checked class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer bg-slate-950 border-slate-700" />
+              <label for="reg-terms" class="text-xs text-slate-400 cursor-pointer select-none">
+                I consent to <span class="text-blue-400 font-medium">UIDAI Aadhaar Verification, IT Act 2000 & ESIGN Electronic Record Terms</span>
+              </label>
+            </div>
+
+            <!-- Submit Button: Generates OTP and opens Verification Modal -->
+            <button type="submit" id="btn-reg-submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 group">
+              <span id="btn-reg-submit-text">🛡️ Verify Identity & Send OTP to Email / Aadhaar</span>
+              <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Quick 1-Click Demo Accounts -->
+        <div class="pt-6 border-t border-slate-800/80 mt-6">
+          <div class="flex items-center justify-between mb-2.5">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <span>⚡</span> 1-Click Instant Sign-In
+            </span>
+            <span class="text-[10px] text-slate-500">Pre-verified demo accounts</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <!-- Sowmay -->
+            <button data-email="sowmay@example.com" class="demo-login-btn p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-blue-500/50 rounded-xl text-left transition-all group flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-blue-400 group-hover:text-blue-300">Sowmay Sharma</span>
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              </div>
+              <p class="text-[10px] text-slate-400">Account Owner &bull; <span class="text-emerald-400">Aadhaar Verified</span></p>
+              <span class="text-[9px] text-amber-400 font-semibold mt-1">⭐ Premium Member</span>
+            </button>
+
+            <!-- Alice -->
+            <button data-email="alice@corp.com" class="demo-login-btn p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/50 rounded-xl text-left transition-all group flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-emerald-400 group-hover:text-emerald-300">Alice Smith</span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <p class="text-[10px] text-slate-400">Disclosing Party &bull; <span class="text-emerald-400">Email Verified</span></p>
+              <span class="text-[9px] text-slate-500 mt-1">Standard (Type Free)</span>
+            </button>
+
+            <!-- Bob -->
+            <button data-email="bob@partner.com" class="demo-login-btn p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-purple-500/50 rounded-xl text-left transition-all group flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-purple-400 group-hover:text-purple-300">Bob Jones</span>
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              </div>
+              <p class="text-[10px] text-slate-400">Receiving Party &bull; <span class="text-emerald-400">PAN Verified</span></p>
+              <span class="text-[9px] text-slate-500 mt-1">Standard (Type Free)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Compliance, Pricing & Security Terms Display (5 cols) -->
+      <div class="lg:col-span-5 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950/70 p-6 sm:p-10 border-t lg:border-t-0 lg:border-l border-slate-800 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-sm font-bold border border-blue-500/30">🛡️</span>
+            <div>
+              <h2 class="text-xs font-bold text-white tracking-wider uppercase">Identity & Pricing Standards</h2>
+              <p class="text-[10px] text-slate-400">Aadhaar Verified &bull; ₹50 Premium Custom Signatures</p>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-300 leading-relaxed mb-5">
+            DocuSign Pro implements strict identity verification and tiered digital signature capabilities:
+          </p>
+
+          <!-- Security Highlights -->
+          <div class="space-y-3.5 text-xs">
+            <div class="p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-blue-400">🪪</span>
+                <p class="font-bold text-slate-200">1. Aadhaar & Govt KYC Name Binding</p>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-normal">
+                Account creation requires UIDAI Aadhaar, Government PAN, or Official Email verification. Your legal name is locked to the document record to prevent forgery.
+              </p>
+            </div>
+
+            <div class="p-3.5 bg-slate-950/70 border border-slate-800/80 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-amber-400">✍️</span>
+                <p class="font-bold text-slate-200">2. Signature Type (Free for All Users)</p>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-normal">
+                All registered accounts can sign unlimited documents using <b>Type</b> (authentic legal cursive signatures locked to their verified identity).
+              </p>
+            </div>
+
+            <div class="p-3.5 bg-slate-950/70 border border-amber-500/30 bg-amber-950/10 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-amber-400">⭐</span>
+                <p class="font-bold text-amber-300">3. Draw & Upload (Premium - ₹50 / signature)</p>
+              </div>
+              <p class="text-[11px] text-slate-300 leading-normal">
+                Hand-drawn canvas and custom scanned signature uploads are reserved for Premium members, or accessible by paying <b>₹50 per signature</b> via instant UPI/Card checkout.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-slate-800/80 mt-6 flex items-center justify-between text-[11px] text-slate-500">
+          <span>UIDAI & ESIGN Compliant</span>
+          <span class="text-emerald-400 font-semibold flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> 256-Bit Cryptographic Seal
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full text-center py-4 text-slate-500 text-[11px] border-t border-slate-800/60 bg-slate-950/40">
+    DocuSign Pro &bull; Compliant with UIDAI Aadhaar Verification, IT Act 2000, 15 U.S.C. § 7001 (ESIGN), and UETA.
+  </footer>
+
+  <!-- Terms Modal -->
+  <div id="terms-modal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg p-6 text-slate-100 border border-slate-800">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🛡️</span> Electronic Signature & Privacy Disclosure
+        </h3>
+        <button id="close-terms-modal" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+      <div class="text-xs text-slate-300 space-y-3 max-h-72 overflow-y-auto pr-1">
+        <p><b>1. Consent to Electronic Records:</b> By utilizing DocuSign Pro, you consent to receive electronic documents and acknowledge that your electronic signature carries the full legal weight of a handwritten pen-and-ink signature under federal law.</p>
+        <p><b>2. Aadhaar & Government ID Verification:</b> Your legal identity is validated via official government registry or verified corporate email. You acknowledge that your digital signature constitutes a binding execution in your verified name only.</p>
+        <p><b>3. Signature Tiers:</b> Typed cursive signatures are free for all registered users. Custom graphical drawing and scanned signature uploads require an active Premium subscription or ₹50 per signature payment.</p>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <button id="accept-modal-btn" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+          I Understand & Agree
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Real-Time Gateway Notification Toast (Simulates Live SMS / Email Arrival) -->
+  <div id="otp-toast" class="fixed top-5 right-5 z-50 max-w-sm bg-slate-900 border-2 border-emerald-500/80 rounded-2xl p-4 shadow-2xl shadow-emerald-500/20 text-slate-100 hidden transition-all duration-300">
+    <div class="flex items-start gap-3">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-lg shrink-0 border border-emerald-500/30">
+        📩
+      </div>
+      <div class="flex-1">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-bold text-emerald-300 tracking-wide uppercase">UIDAI & Email Gateway</span>
+          <span class="text-[10px] text-slate-400">Just now</span>
+        </div>
+        <p id="otp-toast-msg" class="text-xs text-slate-200 leading-snug">
+          Verification OTP sent to your Email & Aadhaar Mobile.
+        </p>
+        <div class="mt-2.5 flex items-center justify-between">
+          <span class="text-xs font-mono font-bold text-emerald-300 bg-emerald-950 px-2.5 py-1 rounded-lg border border-emerald-500/40" id="otp-toast-code">
+            OTP: ------
+          </span>
+          <button type="button" id="btn-quick-fill-otp" class="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1 rounded-lg border border-emerald-500/30 transition-all">
+            ⚡ Auto-Fill Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OTP Verification Dialog Modal -->
+  <div id="otp-verification-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-md p-6 sm:p-7 text-slate-100 relative overflow-hidden">
+      <!-- Glow bar -->
+      <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500"></div>
+
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center text-xl">
+            🛡️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Government Identity Verification</h3>
+            <p class="text-[11px] text-slate-400" id="otp-modal-doc-label">Aadhaar Card & Email OTP</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-otp-modal" class="text-slate-400 hover:text-white text-xl font-bold p-1">&times;</button>
+      </div>
+
+      <!-- Verified Record Details -->
+      <div class="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 mb-5 space-y-2 text-xs">
+        <div class="flex items-center justify-between text-slate-300">
+          <span class="text-slate-400">Legal Name:</span>
+          <span class="font-bold text-white font-mono" id="otp-modal-name">Rohan Sharma</span>
+        </div>
+        <div class="flex items-center justify-between text-slate-300">
+          <span class="text-slate-400" id="otp-modal-id-type">Aadhaar UIDAI:</span>
+          <span class="font-bold text-emerald-400 font-mono" id="otp-modal-id-val">XXXX-XXXX-5678</span>
+        </div>
+        <div class="flex items-center justify-between text-slate-300">
+          <span class="text-slate-400">Email Address:</span>
+          <span class="font-semibold text-blue-300 font-mono" id="otp-modal-email">rohan@example.com</span>
+        </div>
+      </div>
+
+      <!-- Input Section -->
+      <div class="text-center mb-5">
+        <label class="block text-xs font-semibold text-slate-300 mb-2">
+          Enter 6-Digit Verification Code
+        </label>
+        <input type="text" id="modal-otp-input" maxlength="6" placeholder="------" class="w-56 py-3 px-4 bg-slate-950 border-2 border-blue-500/50 focus:border-blue-400 rounded-2xl text-center text-2xl font-mono tracking-[0.4em] font-bold text-white focus:outline-none focus:ring-4 focus:ring-blue-500/20 shadow-inner" />
+        <p class="text-[11px] text-slate-400 mt-2" id="otp-timer-text">Code expires in <span class="font-mono text-blue-400 font-bold" id="otp-countdown">10:00</span></p>
+      </div>
+
+      <!-- Modal Status Alert -->
+      <div id="otp-modal-alert" class="hidden p-3 rounded-xl mb-4 text-xs font-medium text-center"></div>
+
+      <!-- Action Buttons -->
+      <div class="space-y-2">
+        <button type="button" id="btn-modal-verify-otp" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2">
+          <span>Verify OTP & Complete Account Creation</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </button>
+
+        <button type="button" id="btn-modal-resend-otp" class="w-full py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors text-center">
+          Didn't receive the code? Resend OTP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    const tabLogin = document.getElementById('tab-login');
+    const tabRegister = document.getElementById('tab-register');
+    const formLogin = document.getElementById('login-form');
+    const formRegister = document.getElementById('register-form');
+    const alertBox = document.getElementById('auth-alert');
+
+    function showAlert(msg, isError = true) {
+      alertBox.innerText = msg;
+      alertBox.className = `p-3.5 rounded-xl mb-4 text-xs font-semibold ${isError ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`;
+      alertBox.classList.remove('hidden');
+    }
+
+    tabLogin.addEventListener('click', () => {
+      tabLogin.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all";
+      tabRegister.className = "flex-1 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-lg transition-all";
+      formLogin.classList.remove('hidden');
+      formRegister.classList.add('hidden');
+      alertBox.classList.add('hidden');
+    });
+
+    tabRegister.addEventListener('click', () => {
+      tabRegister.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-md transition-all";
+      tabLogin.className = "flex-1 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 rounded-lg transition-all";
+      formRegister.classList.remove('hidden');
+      formLogin.classList.add('hidden');
+      alertBox.classList.add('hidden');
+    });
+
+    // ================= KYC DOCUMENT METHOD SELECTOR =================
+    let currentKycMethod = 'aadhaar';
+    const kycInputLabel = document.getElementById('kyc-input-label');
+    const regDocIdInput = document.getElementById('reg-doc-id');
+    const kycInputHint = document.getElementById('kyc-input-hint');
+    const btnSubmitText = document.getElementById('btn-reg-submit-text');
+
+    document.querySelectorAll('.kyc-method-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.kyc-method-btn').forEach(b => {
+          b.className = "kyc-method-btn p-2.5 rounded-xl border border-slate-800 bg-slate-900 text-slate-400 font-medium hover:text-slate-200 text-center transition-all flex flex-col items-center gap-1";
+        });
+        e.currentTarget.className = "kyc-method-btn p-2.5 rounded-xl border border-blue-500 bg-blue-600/20 text-blue-300 font-bold text-center transition-all flex flex-col items-center gap-1 shadow-sm";
+        
+        currentKycMethod = e.currentTarget.dataset.type;
+
+        if (currentKycMethod === 'aadhaar') {
+          kycInputLabel.innerText = "12-Digit Aadhaar Card Number";
+          regDocIdInput.placeholder = "e.g. 5489 1234 5678";
+          regDocIdInput.value = "5489 1234 5678";
+          kycInputHint.innerText = "Your legal identity and signature rights are anchored to this UIDAI record.";
+          btnSubmitText.innerText = "🛡️ Verify Aadhaar & Send OTP to Email";
+        } else if (currentKycMethod === 'pan') {
+          kycInputLabel.innerText = "10-Character Permanent Account Number (PAN)";
+          regDocIdInput.placeholder = "e.g. ABCDE1234F";
+          regDocIdInput.value = "ABCDE1234F";
+          kycInputHint.innerText = "Your taxpayer identity is verified via Income Tax Department records.";
+          btnSubmitText.innerText = "🛡️ Verify PAN & Send OTP to Email";
+        } else {
+          kycInputLabel.innerText = "Official / Work Email Address";
+          regDocIdInput.placeholder = "e.g. name@company.com";
+          regDocIdInput.value = document.getElementById('reg-email').value || "rohan.sharma@example.com";
+          kycInputHint.innerText = "Corporate email domain identity verification via one-time passcode.";
+          btnSubmitText.innerText = "✉️ Send Verification OTP to Email";
+        }
+      });
+    });
+
+    // Quick-Fill Demo Button
+    const btnQuickFillDemo = document.getElementById('btn-quick-fill-demo');
+    if (btnQuickFillDemo) {
+      btnQuickFillDemo.addEventListener('click', () => {
+        document.getElementById('reg-name').value = "Rohan Sharma";
+        const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('reg-email').value = `rohan.sharma.${randomSuffix}@example.com`;
+        document.getElementById('reg-doc-id').value = "5489 1234 5678";
+        document.getElementById('reg-password').value = "password123";
+        showAlert("Auto-filled Aadhaar Demo data for Rohan Sharma! Click 'Verify Identity & Send OTP' below.", false);
+      });
+    }
+
+    // ================= OTP NOTIFICATION TOAST & MODAL CONTROLLERS =================
+    const otpToast = document.getElementById('otp-toast');
+    const otpToastMsg = document.getElementById('otp-toast-msg');
+    const otpToastCode = document.getElementById('otp-toast-code');
+    const btnQuickFillOtp = document.getElementById('btn-quick-fill-otp');
+
+    const otpModal = document.getElementById('otp-verification-modal');
+    const btnCloseOtpModal = document.getElementById('btn-close-otp-modal');
+    const modalOtpInput = document.getElementById('modal-otp-input');
+    const otpModalAlert = document.getElementById('otp-modal-alert');
+    const btnModalVerifyOtp = document.getElementById('btn-modal-verify-otp');
+    const btnModalResendOtp = document.getElementById('btn-modal-resend-otp');
+    const otpCountdown = document.getElementById('otp-countdown');
+
+    let currentPendingOtp = "";
+    let registrationData = {};
+    let countdownInterval = null;
+
+    function showOtpToast(otp, email, docMasked) {
+      currentPendingOtp = otp;
+      otpToastMsg.innerHTML = `Verification code sent to <b>${email}</b> and mobile linked to <b>${docMasked}</b>.`;
+      otpToastCode.innerText = `OTP: ${otp}`;
+      otpToast.classList.remove('hidden');
+      setTimeout(() => {
+        otpToast.classList.add('opacity-100');
+      }, 10);
+    }
+
+    btnQuickFillOtp.addEventListener('click', () => {
+      if (currentPendingOtp) {
+        modalOtpInput.value = currentPendingOtp;
+        modalOtpInput.focus();
+        showModalAlert("Code auto-filled from Gateway notification! Click Verify to continue.", false);
+      }
+    });
+
+    btnCloseOtpModal.addEventListener('click', () => {
+      otpModal.classList.add('hidden');
+      otpModal.classList.remove('flex');
+      if (countdownInterval) clearInterval(countdownInterval);
+    });
+
+    function showModalAlert(msg, isError = true) {
+      otpModalAlert.innerText = msg;
+      otpModalAlert.className = `p-3 rounded-xl mb-4 text-xs font-semibold text-center ${isError ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`;
+      otpModalAlert.classList.remove('hidden');
+    }
+
+    function startOtpCountdown(seconds = 600) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      let remaining = seconds;
+      countdownInterval = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(countdownInterval);
+          otpCountdown.innerText = "00:00 (Expired)";
+        } else {
+          const m = String(Math.floor(remaining / 60)).padStart(2, '0');
+          const s = String(remaining % 60).padStart(2, '0');
+          otpCountdown.innerText = `${m}:${s}`;
+        }
+      }, 1000);
+    }
+
+    // ================= REGISTER SUBMIT: SEND OTP TO EMAIL & AADHAAR =================
+    formRegister.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const docId = regDocIdInput.value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      if (!name || !email || !docId || !password) {
+        showAlert("Please fill in all required fields (Name, Email, Document ID, and Password).");
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-reg-submit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Dispatching OTP to Email & UIDAI Gateway...</span>`;
+
+      try {
+        const res = await fetch('/api/auth/send-kyc-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doc_type: currentKycMethod,
+            identifier: docId,
+            email: email,
+            name: name
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to generate verification OTP.");
+
+        // Cache registration payload
+        registrationData = {
+          name: name,
+          email: email,
+          password: password,
+          kyc_doc_type: currentKycMethod,
+          kyc_doc_id: docId,
+          masked_id: data.masked_identifier
+        };
+
+        const generatedOtp = data.otp || data.otp_demo || "123456";
+        currentPendingOtp = generatedOtp;
+
+        // 1. Show notification toast on screen
+        showOtpToast(generatedOtp, email, data.masked_identifier);
+
+        // 2. Populate and display the OTP Verification Modal
+        document.getElementById('otp-modal-name').innerText = name;
+        document.getElementById('otp-modal-email').innerText = email;
+        document.getElementById('otp-modal-id-type').innerText = currentKycMethod === 'aadhaar' ? 'Aadhaar UIDAI:' : currentKycMethod === 'pan' ? 'Govt PAN:' : 'Email ID:';
+        document.getElementById('otp-modal-id-val').innerText = data.masked_identifier;
+        document.getElementById('otp-modal-doc-label').innerText = `${currentKycMethod === 'aadhaar' ? 'Aadhaar Card' : currentKycMethod === 'pan' ? 'PAN Card' : 'Corporate Email'} & Email OTP Verification`;
+
+        modalOtpInput.value = generatedOtp; // Pre-fill with the freshly generated OTP for seamless testing
+        otpModalAlert.classList.add('hidden');
+        startOtpCountdown(600);
+
+        otpModal.classList.remove('hidden');
+        otpModal.classList.add('flex');
+        modalOtpInput.focus();
+
+        showAlert("6-Digit OTP generated! Check your email / SMS notification to complete verification.", false);
+      } catch (err) {
+        showAlert(err.message, true);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span id="btn-reg-submit-text">🛡️ Verify Identity & Send OTP to Email / Aadhaar</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      }
+    });
+
+    // ================= VERIFY OTP & COMPLETE REGISTRATION =================
+    btnModalVerifyOtp.addEventListener('click', async () => {
+      const otpVal = modalOtpInput.value.trim();
+      if (!otpVal || otpVal.length < 6) {
+        showModalAlert("Please enter the complete 6-digit verification code.", true);
+        return;
+      }
+
+      btnModalVerifyOtp.disabled = true;
+      btnModalVerifyOtp.innerHTML = `<span>Verifying Identity with UIDAI & Creating Account...</span>`;
+
+      try {
+        // Step 1: Verify OTP with government engine
+        const verifyRes = await fetch('/api/auth/verify-kyc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doc_type: registrationData.kyc_doc_type,
+            identifier: registrationData.kyc_doc_id,
+            otp: otpVal,
+            name: registrationData.name,
+            email: registrationData.email
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        if (!verifyRes.ok) throw new Error(verifyData.detail || "OTP verification failed.");
+
+        // Step 2: Register verified account
+        const regRes = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: verifyData.verified_name || registrationData.name,
+            email: registrationData.email,
+            password: registrationData.password,
+            kyc_doc_type: registrationData.kyc_doc_type,
+            kyc_doc_id: verifyData.doc_id || registrationData.masked_id,
+            kyc_otp: otpVal
+          })
+        });
+
+        const regData = await regRes.json();
+        if (!regRes.ok) throw new Error(regData.detail || "Registration failed.");
+
+        // Step 3: Success state
+        showModalAlert(`🎉 Verified! Welcome, ${regData.user.name}. Opening your Dashboard...`, false);
+        btnModalVerifyOtp.classList.replace('from-emerald-600', 'from-blue-600');
+        btnModalVerifyOtp.innerHTML = `<span>Redirecting to Dashboard...</span>`;
+
+        localStorage.setItem('docusign_token', regData.token);
+        localStorage.setItem('docusign_user', JSON.stringify(regData.user));
+
+        setTimeout(() => {
+          window.location.href = '/?tab=dashboard';
+        }, 800);
+      } catch (err) {
+        showModalAlert(err.message, true);
+        btnModalVerifyOtp.disabled = false;
+        btnModalVerifyOtp.innerHTML = `<span>Verify OTP & Complete Account Creation</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+      }
+    });
+
+    // Modal Resend OTP
+    btnModalResendOtp.addEventListener('click', async () => {
+      btnModalResendOtp.innerText = "Dispatching fresh OTP...";
+      btnModalResendOtp.disabled = true;
+
+      try {
+        const res = await fetch('/api/auth/send-kyc-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            doc_type: registrationData.kyc_doc_type,
+            identifier: registrationData.kyc_doc_id,
+            email: registrationData.email,
+            name: registrationData.name
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Failed to resend OTP");
+
+        const newOtp = data.otp || data.otp_demo || "123456";
+        currentPendingOtp = newOtp;
+        modalOtpInput.value = newOtp;
+        showOtpToast(newOtp, registrationData.email, data.masked_identifier);
+        startOtpCountdown(600);
+        showModalAlert(`Fresh OTP ${newOtp} dispatched to your Email & Aadhaar mobile!`, false);
+      } catch (err) {
+        showModalAlert(err.message, true);
+      } finally {
+        btnModalResendOtp.disabled = false;
+        btnModalResendOtp.innerText = "Didn't receive the code? Resend OTP";
+      }
+    });
+
+    // ================= FORM SUBMISSION: LOGIN =================
+    formLogin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const termsAccepted = document.getElementById('login-terms').checked;
+
+      if (!termsAccepted) {
+        showAlert("You must agree to the Privacy & Security Terms to sign in.");
+        return;
+      }
+
+      const submitBtn = document.getElementById('btn-login-submit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Signing In...</span>`;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Authentication failed");
+
+        localStorage.setItem('docusign_token', data.token);
+        localStorage.setItem('docusign_user', JSON.stringify(data.user));
+        window.location.href = '/?tab=dashboard';
+      } catch (err) {
+        showAlert(err.message, true);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Sign In with Verified Identity</span><svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>`;
+      }
+    });
+
+    // 1-Click Instant Demo Login
+    document.querySelectorAll('.demo-login-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const email = e.currentTarget.dataset.email;
+        document.getElementById('login-email').value = email;
+        document.getElementById('login-password').value = 'password123';
+        formLogin.dispatchEvent(new Event('submit'));
+      });
+    });
+
+    // Terms Modal
+    const termsModal = document.getElementById('terms-modal');
+    document.getElementById('view-terms-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      termsModal.classList.remove('hidden');
+      termsModal.classList.add('flex');
+    });
+    document.getElementById('close-terms-modal').addEventListener('click', () => {
+      termsModal.classList.add('hidden');
+      termsModal.classList.remove('flex');
+    });
+    document.getElementById('accept-modal-btn').addEventListener('click', () => {
+      document.getElementById('login-terms').checked = true;
+      termsModal.classList.add('hidden');
+      termsModal.classList.remove('flex');
+    });
+  </script>
+</body>
+</html>

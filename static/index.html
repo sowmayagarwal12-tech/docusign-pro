@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DocuSign Pro - Enterprise Signature & Document Dashboard</title>
+
+  <!-- Immediate auth check: if not logged in, redirect to login page first -->
+  <script>
+    if (!localStorage.getItem('docusign_token')) {
+      window.location.replace('/login');
+    }
+  </script>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- PDF.js CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden selection:bg-blue-600 selection:text-white">
+
+  <!-- ================= TOP ENTERPRISE NAVIGATION HEADER ================= -->
+  <header class="bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 h-16 flex items-center justify-between px-6 z-30 shrink-0">
+    <!-- Brand -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+      </div>
+      <div>
+        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          DocuSign <span class="text-[10px] uppercase font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full tracking-wider">Enterprise Pro</span>
+        </h1>
+        <p class="text-[10px] text-slate-400 hidden sm:block">Aadhaar Verified &bull; Cryptographic Audit Cloud</p>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 shadow-inner">
+      <button id="nav-dashboard-btn" data-tab="dashboard" class="nav-tab-btn px-4 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 border-b-2 border-blue-500 text-blue-400 bg-blue-500/10 transition-all">
+        <span>📊 Dashboard</span>
+      </button>
+      <button id="nav-studio-btn" data-tab="studio" class="nav-tab-btn px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all">
+        <span>✍️ Document Studio</span>
+      </button>
+    </div>
+
+    <!-- Right Side Actions & User Profile -->
+    <div class="flex items-center gap-3">
+      <!-- Quick Upload PDF button -->
+      <label class="hidden md:flex px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl cursor-pointer items-center gap-1.5 shadow-md shadow-blue-500/20 transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        <span>Upload Document</span>
+        <input type="file" id="pdf-file-upload-top" accept="application/pdf" class="hidden" />
+      </label>
+
+      <!-- Authenticated User Profile Pill -->
+      <div class="flex items-center gap-2.5 pl-3 border-l border-slate-800">
+        <div class="flex items-center gap-2">
+          <div id="user-avatar" class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-xs font-bold text-white shadow-md">
+            U
+          </div>
+          <div class="text-left hidden lg:block">
+            <div class="flex items-center gap-1.5">
+              <p id="user-name-display" class="text-xs font-bold text-white">Loading...</p>
+              <span id="top-kyc-badge" class="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-semibold flex items-center gap-0.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Aadhaar Verified
+              </span>
+            </div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <p id="user-email-display" class="text-[10px] text-slate-400 font-mono">...</p>
+              <span id="top-premium-badge"></span>
+            </div>
+          </div>
+        </div>
+
+        <button id="btn-terms-modal-open" title="Privacy & Security Terms" class="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-900 border border-slate-800 rounded-lg text-xs transition-all">
+          🛡️
+        </button>
+        <button id="btn-logout" title="Sign out or switch identity" class="px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded-lg transition-all">
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 1. USER DASHBOARD VIEW (DEFAULT ON LOGIN) ================= -->
+  <main id="view-dashboard" class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 bg-slate-950">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- User Hero Greeting Card -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950/80 border border-slate-800 p-6 sm:p-8 shadow-xl">
+        <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-center gap-4">
+            <div id="dash-avatar" class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-xl font-extrabold text-white shadow-xl shadow-blue-500/20 border border-white/10 shrink-0">
+              U
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-xl sm:text-2xl font-extrabold text-white tracking-tight" id="dash-greeting-heading">
+                  Welcome to Your Dashboard, <span id="dash-user-name" class="text-blue-400">User</span>
+                </h2>
+                <span id="dash-kyc-pill" class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Aadhaar KYC Verified
+                </span>
+                <span id="dash-tier-pill" class="inline-flex items-center gap-1 text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                  ⭐ Premium Member
+                </span>
+              </div>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1.5 flex flex-wrap items-center gap-2">
+                <span>Logged in as <b id="dash-user-email" class="text-slate-200 font-mono">user@corp.com</b></span>
+                <span class="text-slate-600">&bull;</span>
+                <span>Role: <b id="dash-user-role" class="text-blue-300 font-medium">Account Owner</b></span>
+                <span class="text-slate-600">&bull;</span>
+                <span class="text-slate-400" id="dash-current-date">Today</span>
+              </p>
+              <div id="dash-signature-capability" class="mt-2 text-xs flex items-center gap-2">
+                <!-- Dynamically populated: Type Free vs Draw/Upload Unlocked -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div class="flex items-center flex-wrap gap-2.5">
+            <label class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/25 cursor-pointer flex items-center gap-2 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>+ New Document</span>
+              <input type="file" id="pdf-file-upload-dash" accept="application/pdf" class="hidden" />
+            </label>
+
+            <button id="dash-btn-quick-self-sign" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 transition-all">
+              <span>✍️ Self-Sign</span>
+            </button>
+
+            <button id="dash-btn-quick-multi-party" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-xs rounded-xl flex items-center gap-2 transition-all">
+              <span>📬 Request Signatures</span>
+            </button>
+
+            <button id="dash-btn-upgrade-license" class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/25 flex items-center gap-1.5 transition-all">
+              <span>⚡ Unlock Draw/Upload (₹50)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Analytics Row (4 Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Metric 1: Total Envelopes -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total Envelopes</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1" id="stat-total-docs">0</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Documents created & managed</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center text-xl">
+            📁
+          </div>
+        </div>
+
+        <!-- Metric 2: Pending / Action Required -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-amber-400 uppercase tracking-wider">In Progress</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1" id="stat-pending-docs">0</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Awaiting recipient signatures</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center text-xl">
+            ⏳
+          </div>
+        </div>
+
+        <!-- Metric 3: Completed & Sealed -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-emerald-400 uppercase tracking-wider">Completed & Sealed</p>
+            <h3 class="text-2xl sm:text-3xl font-extrabold text-white mt-1" id="stat-completed-docs">0</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Cryptographically certified</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-xl">
+            ✅
+          </div>
+        </div>
+
+        <!-- Metric 4: Legal & Cryptographic Compliance -->
+        <div class="bg-slate-900/80 border border-slate-800/80 rounded-2xl p-5 flex items-center justify-between">
+          <div>
+            <p class="text-xs font-medium text-indigo-400 uppercase tracking-wider">Legal Integrity</p>
+            <h3 class="text-xl sm:text-2xl font-extrabold text-white mt-1 flex items-center gap-1.5">
+              <span>100%</span>
+              <span class="text-[10px] font-bold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 rounded">UIDAI</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">SHA-256 Tamper-evident seals</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center text-xl">
+            🛡️
+          </div>
+        </div>
+      </div>
+
+      <!-- Instant Templates Launchpad -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-3xl p-6">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <span>⚡</span> Standard Legal Templates
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Pre-configured corporate agreements ready for instant execution or dispatch</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Template 1: Mutual NDA -->
+          <div class="bg-slate-950 border border-slate-800 hover:border-blue-500/50 rounded-2xl p-5 flex flex-col justify-between transition-all group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-lg font-bold">📄</span>
+                <span class="text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Confidentiality</span>
+              </div>
+              <h4 class="text-sm font-bold text-white group-hover:text-blue-400 transition-colors">Mutual Non-Disclosure Agreement</h4>
+              <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Standard 2-party confidentiality agreement with predefined signature & execution blocks.
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2">
+              <button class="template-launch-btn flex-1 py-1.5 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-xs font-bold rounded-lg transition-all" data-sample="nda" data-mode="self-sign">
+                ✍️ Self-Sign
+              </button>
+              <button class="template-launch-btn flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-lg transition-all" data-sample="nda" data-mode="multi-party">
+                📬 Send to Others
+              </button>
+            </div>
+          </div>
+
+          <!-- Template 2: Employment Offer Letter -->
+          <div class="bg-slate-950 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-5 flex flex-col justify-between transition-all group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-lg font-bold">💼</span>
+                <span class="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">HR & Hiring</span>
+              </div>
+              <h4 class="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">Employment Offer Letter</h4>
+              <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Corporate employment contract with compensation terms, benefits, and candidate acceptance block.
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2">
+              <button class="template-launch-btn flex-1 py-1.5 bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/30 text-xs font-bold rounded-lg transition-all" data-sample="offer" data-mode="self-sign">
+                ✍️ Self-Sign
+              </button>
+              <button class="template-launch-btn flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-lg transition-all" data-sample="offer" data-mode="multi-party">
+                📬 Send to Others
+              </button>
+            </div>
+          </div>
+
+          <!-- Template 3: Independent Consulting -->
+          <div class="bg-slate-950 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-5 flex flex-col justify-between transition-all group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-lg font-bold">📑</span>
+                <span class="text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Contractors</span>
+              </div>
+              <h4 class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors">Independent Consulting Agreement</h4>
+              <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Contractor statement of work, milestone deliverables, and dual-party execution clause.
+              </p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2">
+              <button class="template-launch-btn flex-1 py-1.5 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-500/30 text-xs font-bold rounded-lg transition-all" data-sample="consulting" data-mode="self-sign">
+                ✍️ Self-Sign
+              </button>
+              <button class="template-launch-btn flex-1 py-1.5 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-bold rounded-lg transition-all" data-sample="consulting" data-mode="multi-party">
+                📬 Send to Others
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Envelopes Table & Documents Management -->
+      <div class="bg-slate-900/80 border border-slate-800/80 rounded-3xl overflow-hidden shadow-xl">
+        <div class="p-6 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>📬</span> Document Envelopes & Audit Registry
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Track real-time signing ceremonies, cryptographic digests, and verified certificates</p>
+          </div>
+
+          <!-- Controls: Search, Filter Tabs, Refresh -->
+          <div class="flex items-center flex-wrap gap-2.5">
+            <!-- Search -->
+            <div class="relative">
+              <input type="text" id="envelope-search-input" placeholder="Search envelopes..." class="w-48 sm:w-60 pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              <span class="absolute left-2.5 top-2 text-slate-400 text-xs">🔍</span>
+            </div>
+
+            <!-- Filter Status -->
+            <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1 text-xs">
+              <button data-filter="all" class="filter-status-btn px-2.5 py-1 rounded-lg font-bold bg-blue-600 text-white">All</button>
+              <button data-filter="completed" class="filter-status-btn px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">Sealed</button>
+              <button data-filter="waiting" class="filter-status-btn px-2.5 py-1 rounded-lg font-semibold text-slate-400 hover:text-slate-200">Pending</button>
+            </div>
+
+            <!-- Refresh Button -->
+            <button id="btn-refresh-envelopes" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all">
+              <span>🔄 Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800/80 bg-slate-950/60 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                <th class="py-4 px-6">Document Title</th>
+                <th class="py-4 px-4">Status</th>
+                <th class="py-4 px-4">Signers & Progress</th>
+                <th class="py-4 px-4">Created Date</th>
+                <th class="py-4 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="envelopes-table-body" class="text-slate-300 divide-y divide-slate-800/60">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Identity & Security Credentials Footer Card -->
+      <div class="bg-slate-950/80 border border-slate-800/80 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center font-bold">
+            🔒
+          </div>
+          <div>
+            <p class="font-semibold text-slate-200">Authenticated Legal Identity Active</p>
+            <p class="text-[11px] text-slate-400">Signatures executed from this session are legally bound to <b class="text-white" id="legal-footer-name">...</b></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 text-[11px]">
+          <span class="flex items-center gap-1 text-emerald-400 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Aadhaar & ESIGN Act Binding Active
+          </span>
+          <span class="text-slate-600">&bull;</span>
+          <span>SHA-256 Certificate Engine</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ================= 2. DOCUMENT STUDIO VIEW ================= -->
+  <main id="view-studio" class="flex-1 flex overflow-hidden hidden">
+    
+    <!-- Left Sidebar: Tools & Workflow Configuration -->
+    <aside class="w-80 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0 overflow-y-auto">
+      
+      <!-- Studio Navigation Back to Dashboard -->
+      <div class="p-3 border-b border-slate-800/80 bg-slate-900/60 flex items-center justify-between">
+        <button id="btn-back-to-dashboard" class="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors">
+          <span>← Back to Dashboard</span>
+        </button>
+        <span class="text-[10px] text-slate-400 uppercase font-mono tracking-wider">Studio Mode</span>
+      </div>
+
+      <div class="p-4 border-b border-slate-800">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Workflow Mode</label>
+        <select id="workflow-mode-select" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="self-sign">✍️ Self-Sign (Sign & Download Now)</option>
+          <option value="multi-party">📬 Send to Others (Multi-Signer)</option>
+        </select>
+      </div>
+
+      <!-- Multi-Party Signers Setup -->
+      <div id="multiparty-signers-panel" class="p-4 border-b border-slate-800 hidden">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-400">Signers & Recipients</label>
+          <button id="btn-add-signer" class="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1">
+            + Add Signer
+          </button>
+        </div>
+        <div id="signers-list-container">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="mt-3">
+          <label class="text-[11px] text-slate-400 block mb-1">Place fields for signer:</label>
+          <select id="active-signer-select" class="w-full bg-slate-900 border border-slate-700 text-white rounded-xl px-2.5 py-1.5 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <!-- Options populated by JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Field Placement Toolbox -->
+      <div class="p-4 flex-1">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Add Signing Fields</label>
+        <p class="text-[11px] text-slate-500 mb-3">Click any field below to place onto active page:</p>
+
+        <div class="grid grid-cols-1 gap-2.5">
+          <button data-type="signature" class="field-tool-btn flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-blue-500/50 text-left transition-all group">
+            <span class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-base group-hover:scale-110 transition-transform">✍️</span>
+            <div>
+              <p class="text-xs font-bold text-slate-200">Signature</p>
+              <p class="text-[10px] text-slate-400">Bound to verified legal identity</p>
+            </div>
+          </button>
+
+          <button data-type="initials" class="field-tool-btn flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-indigo-500/50 text-left transition-all group">
+            <span class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-base group-hover:scale-110 transition-transform">🔏</span>
+            <div>
+              <p class="text-xs font-bold text-slate-200">Initials</p>
+              <p class="text-[10px] text-slate-400">Compact initial box</p>
+            </div>
+          </button>
+
+          <button data-type="date" class="field-tool-btn flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-emerald-500/50 text-left transition-all group">
+            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-base group-hover:scale-110 transition-transform">📅</span>
+            <div>
+              <p class="text-xs font-bold text-slate-200">Date Signed</p>
+              <p class="text-[10px] text-slate-400">Auto-populates execution date</p>
+            </div>
+          </button>
+
+          <button data-type="text" class="field-tool-btn flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/50 text-left transition-all group">
+            <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center text-base group-hover:scale-110 transition-transform">📝</span>
+            <div>
+              <p class="text-xs font-bold text-slate-200">Text Box</p>
+              <p class="text-[10px] text-slate-400">Name, Job Title, Company</p>
+            </div>
+          </button>
+
+          <button data-type="checkbox" class="field-tool-btn flex items-center gap-3 p-3 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-purple-500/50 text-left transition-all group">
+            <span class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-base group-hover:scale-110 transition-transform">☑️</span>
+            <div>
+              <p class="text-xs font-bold text-slate-200">Checkbox</p>
+              <p class="text-[10px] text-slate-400">Consent or acknowledgment</p>
+            </div>
+          </button>
+        </div>
+
+        <!-- Sole-Identity Notice -->
+        <div class="mt-6 p-3 bg-blue-950/40 border border-blue-900/40 rounded-xl">
+          <p class="text-[11px] font-semibold text-blue-300 mb-1 flex items-center gap-1.5">
+            <span>🔒 Sole Identity Rule</span>
+          </p>
+          <p class="text-[10px] text-slate-400 leading-relaxed">
+            Under Aadhaar & legal terms, signatures are strictly bound to your legal name. You cannot sign fields assigned to other recipients.
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Studio: Document Viewer & Sticky Toolbar -->
+    <section class="flex-1 flex flex-col bg-slate-900 overflow-hidden relative">
+      
+      <!-- Studio Header Bar -->
+      <div class="h-14 bg-slate-950/80 border-b border-slate-800 px-6 flex items-center justify-between shrink-0 z-20">
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-bold text-white truncate max-w-xs" id="current-doc-title">Loading document...</span>
+          <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full" id="current-doc-pages">1 Page</span>
+          <span class="text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold" id="field-count-badge">0 Fields Placed</span>
+        </div>
+
+        <!-- Zoom & Viewport Controls -->
+        <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2 py-1">
+          <button id="btn-zoom-out" class="p-1 hover:text-blue-400 text-slate-400 text-xs font-bold px-2">&minus;</button>
+          <span id="zoom-level-text" class="text-[11px] font-mono text-slate-300 px-1">115%</span>
+          <button id="btn-zoom-in" class="p-1 hover:text-blue-400 text-slate-400 text-xs font-bold px-2">&#43;</button>
+          <div class="h-3 w-px bg-slate-700 mx-1"></div>
+          <button id="btn-fit-width" class="text-[10px] text-slate-400 hover:text-white px-2 py-0.5 font-medium">Fit Width</button>
+        </div>
+
+        <!-- Final Action CTA -->
+        <div>
+          <!-- Self Sign Action -->
+          <button id="btn-seal-download" class="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center gap-2">
+            <span>🔒 Seal & Download PDF</span>
+          </button>
+
+          <!-- Multi-Party Action -->
+          <button id="btn-send-envelope" class="px-5 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/25 transition-all hidden flex items-center gap-2">
+            <span>🚀 Send Envelope</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PDF Canvas Scrollport -->
+      <div class="flex-1 overflow-auto p-8 relative flex justify-center bg-slate-900" id="pdf-scroll-area">
+        <div id="pdf-container" class="relative">
+          <!-- Dynamically populated by PDF.js and field overlays -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= SIGNATURE CAPTURE MODAL (TYPE FREE | DRAW & UPLOAD PREMIUM ₹50) ================= -->
+  <div id="signatureModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150 text-slate-900">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Adopt Your Signature</h3>
+          <p class="text-xs text-slate-500">Legal verification locked to your authenticated name</p>
+        </div>
+        <button id="sig-close-x" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
+      </div>
+
+      <!-- Modal Tabs: Type (Free for All) | Draw (Premium ₹50) | Upload (Premium ₹50) -->
+      <div class="flex border-b border-slate-100 bg-slate-50/70 px-6">
+        <button id="tab-btn-type" class="flex-1 py-3 text-center text-xs font-bold border-b-2 border-blue-600 text-blue-600 flex items-center justify-center gap-1.5" onclick="window.signatureManager.setMode('type')">
+          <span>⌨️ Type</span>
+          <span class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.2 rounded font-semibold">Free</span>
+        </button>
+        <button id="tab-btn-draw" class="flex-1 py-3 text-center text-xs font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center justify-center gap-1" onclick="window.signatureManager.setMode('draw')">
+          <span>✏️ Draw</span>
+          <span id="draw-tab-badge"><span class="text-[9px] text-amber-600 font-bold">🔒 ₹50</span></span>
+        </button>
+        <button id="tab-btn-upload" class="flex-1 py-3 text-center text-xs font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent flex items-center justify-center gap-1" onclick="window.signatureManager.setMode('upload')">
+          <span>📁 Upload</span>
+          <span id="upload-tab-badge"><span class="text-[9px] text-amber-600 font-bold">🔒 ₹50</span></span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6">
+        
+        <!-- PANE 1: TYPE (FREE FOR ALL USERS - LOCKED TO LEGAL NAME) -->
+        <div id="tab-pane-type" class="space-y-4">
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-semibold text-slate-700">Authenticated Legal Name:</label>
+              <span class="text-[10px] text-emerald-600 font-bold flex items-center gap-1">🔒 Locked by Aadhaar/KYC</span>
+            </div>
+            <input type="text" id="sig-type-input" readonly value="Verified Signer" class="w-full px-3.5 py-2 bg-slate-100 border border-slate-300 rounded-xl text-sm font-bold text-slate-800 cursor-not-allowed select-none focus:outline-none" />
+            <p class="text-[10px] text-slate-500 mt-1">Under federal law, electronic signatures are legally executed in your verified legal name.</p>
+          </div>
+
+          <label class="text-xs font-semibold text-slate-700 block">Select Handwritten Style:</label>
+          <div id="typed-font-list" class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+        <!-- PANE 2: DRAW (PREMIUM / ₹50 PER SIGNATURE) -->
+        <div id="tab-pane-draw" class="space-y-4 hidden">
+          <!-- Premium Paywall Lock Overlay for Standard Users -->
+          <div id="draw-premium-lock" class="p-6 bg-slate-900 border border-amber-500/40 rounded-2xl text-center text-white space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-2xl font-bold">
+              ⭐
+            </div>
+            <h4 class="text-sm font-bold text-white">Premium Feature: Hand-Drawn Signatures</h4>
+            <p class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+              Standard accounts can sign using legal <b>Type</b> signatures for free. Custom hand-drawn canvas signatures are reserved for Premium accounts at <b>₹50 per signature</b>.
+            </p>
+            <button type="button" class="btn-open-signature-payment px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/25 transition-all">
+              ⚡ Pay ₹50 to Unlock Draw & Upload
+            </button>
+          </div>
+
+          <!-- Drawing Canvas (Unlocked for Premium) -->
+          <div id="draw-canvas-box" class="space-y-4 hidden">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl relative overflow-hidden bg-slate-50/50">
+              <canvas id="sig-canvas" class="w-full h-44 block"></canvas>
+              <div class="absolute bottom-2 left-4 text-[10px] text-slate-400 pointer-events-none select-none">
+                Draw your personal signature above (Premium Unlocked)
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-500 font-medium">Ink:</span>
+                <button class="pen-color-btn w-6 h-6 rounded-full bg-blue-900 ring-2 ring-offset-2 ring-blue-600 transition-all" data-color="#1e3a8a"></button>
+                <button class="pen-color-btn w-6 h-6 rounded-full bg-slate-950 transition-all" data-color="#09090b"></button>
+                <button class="pen-color-btn w-6 h-6 rounded-full bg-blue-600 transition-all" data-color="#2563eb"></button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button id="sig-undo-btn" class="px-3 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded-lg font-medium">Undo</button>
+                <button id="sig-clear-btn" class="px-3 py-1 text-xs text-red-600 hover:bg-red-50 rounded-lg font-medium">Clear</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANE 3: UPLOAD (PREMIUM / ₹50 PER SIGNATURE) -->
+        <div id="tab-pane-upload" class="space-y-4 hidden">
+          <!-- Premium Paywall Lock Overlay for Standard Users -->
+          <div id="upload-premium-lock" class="p-6 bg-slate-900 border border-amber-500/40 rounded-2xl text-center text-white space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto text-2xl font-bold">
+              ⭐
+            </div>
+            <h4 class="text-sm font-bold text-white">Premium Feature: Scanned Image Upload</h4>
+            <p class="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+              Standard accounts can sign using legal <b>Type</b> signatures for free. Uploading custom signature images requires a <b>Premium License at ₹50 per signature</b>.
+            </p>
+            <button type="button" class="btn-open-signature-payment px-5 py-2.5 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg shadow-amber-500/25 transition-all">
+              ⚡ Pay ₹50 to Unlock Draw & Upload
+            </button>
+          </div>
+
+          <!-- Upload Content Box (Unlocked for Premium) -->
+          <div id="upload-content-box" class="space-y-4 hidden">
+            <div class="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center bg-slate-50/50">
+              <input type="file" id="sig-upload-input" accept="image/png, image/jpeg" class="hidden" />
+              <label for="sig-upload-input" class="cursor-pointer flex flex-col items-center">
+                <span class="text-2xl mb-2">📤</span>
+                <span class="text-xs font-semibold text-blue-600 hover:underline">Upload signature image</span>
+                <span class="text-[10px] text-slate-400 mt-1">PNG or JPG with light background (Premium Unlocked)</span>
+              </label>
+              <img id="sig-upload-preview" class="max-h-24 mx-auto mt-4 hidden border rounded p-1 bg-white" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+        <p class="text-[10px] text-slate-400 max-w-[240px] leading-tight">
+          By clicking Adopt, you agree that your signature is legal, binding, and executed in your name only.
+        </p>
+        <div class="flex items-center gap-2">
+          <button id="sig-cancel-btn" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200 rounded-xl transition-all">Cancel</button>
+          <button id="sig-adopt-btn" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-500/25 transition-all">
+            Adopt & Sign
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= ₹50 SIGNATURE PAYMENT GATEWAY MODAL ================= -->
+  <div id="signaturePaymentModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden text-slate-100">
+      
+      <!-- Payment Header -->
+      <div class="p-6 bg-gradient-to-r from-slate-950 via-slate-900 to-blue-950/80 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl font-bold">
+            ⭐
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Unlock Custom Signature</h3>
+            <p class="text-xs text-slate-400">DocuSign Pro &bull; Instant License Checkout</p>
+          </div>
+        </div>
+        <button id="btn-close-payment-modal" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+      </div>
+
+      <!-- Payment Body -->
+      <div class="p-6 space-y-4">
+        <!-- Price Display Card -->
+        <div class="p-4 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-400">License Item</p>
+            <p class="text-sm font-bold text-white">1x Premium Signature (Draw & Upload Unlocked)</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 block line-through">₹199</span>
+            <span class="text-2xl font-extrabold text-emerald-400">₹50</span>
+          </div>
+        </div>
+
+        <!-- Payment Method Tabs -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-2">Select Payment Method</label>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <button type="button" class="pay-method-tab p-2.5 rounded-xl border border-blue-500 bg-blue-500/20 text-blue-300 font-bold text-center" data-method="upi">
+              📱 UPI
+            </button>
+            <button type="button" class="pay-method-tab p-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-medium hover:text-slate-200 text-center" data-method="card">
+              💳 Card
+            </button>
+            <button type="button" class="pay-method-tab p-2.5 rounded-xl border border-slate-800 bg-slate-950 text-slate-400 font-medium hover:text-slate-200 text-center" data-method="netbanking">
+              🏦 NetBanking
+            </button>
+          </div>
+        </div>
+
+        <!-- UPI Details Pane -->
+        <div id="pay-pane-upi" class="space-y-3">
+          <label class="block text-[11px] text-slate-400">UPI App or Virtual Payment Address (VPA)</label>
+          <div class="flex gap-2">
+            <button type="button" class="quick-upi-btn flex-1 p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-center font-medium">
+              GPay / PhonePe
+            </button>
+            <button type="button" class="quick-upi-btn flex-1 p-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs text-center font-medium">
+              Paytm / BHIM
+            </button>
+          </div>
+          <input type="text" id="upi-id-input" placeholder="e.g. mobile@upi or username@okhdfcbank" value="user@okhdfcbank" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono" />
+        </div>
+
+        <!-- Card Details Pane (Hidden by default) -->
+        <div id="pay-pane-card" class="space-y-3 hidden">
+          <input type="text" placeholder="Card Number (4111 2222 3333 4444)" value="4111 2222 3333 4444" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white focus:outline-none font-mono" />
+          <div class="grid grid-cols-2 gap-2">
+            <input type="text" placeholder="MM/YY" value="12/28" class="px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white text-center font-mono" />
+            <input type="password" placeholder="CVV (***)" value="123" class="px-3.5 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white text-center font-mono" />
+          </div>
+        </div>
+
+        <!-- NetBanking Pane (Hidden by default) -->
+        <div id="pay-pane-netbanking" class="space-y-3 hidden">
+          <select class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white">
+            <option>HDFC Bank</option>
+            <option>State Bank of India (SBI)</option>
+            <option>ICICI Bank</option>
+            <option>Axis Bank</option>
+          </select>
+        </div>
+
+        <div class="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[11px] text-emerald-300 flex items-center gap-2">
+          <span>🔒</span> 256-Bit SSL Encrypted &bull; 100% Secure Payment
+        </div>
+      </div>
+
+      <!-- Payment Footer -->
+      <div class="p-6 bg-slate-950 border-t border-slate-800 flex items-center justify-between">
+        <span class="text-xs text-slate-400">Total: <b class="text-white font-mono text-sm">₹50.00</b></span>
+        <button id="btn-confirm-sig-payment" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-xl shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2">
+          <span>Pay ₹50 Securely</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= ACCESS VIOLATION / SOLE-SIGNER SECURITY MODAL ================= -->
+  <div id="securityViolationModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-red-500/40 rounded-2xl shadow-2xl w-full max-w-md p-6 text-slate-100">
+      <div class="w-12 h-12 rounded-2xl bg-red-500/20 text-red-400 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+        🚫
+      </div>
+      <h3 class="text-base font-bold text-center text-white mb-2">Electronic Signature Security Notice</h3>
+      <p class="text-xs text-slate-300 text-center leading-relaxed mb-4" id="violation-message">
+        Under electronic signature privacy and compliance terms (ESIGN Act & UETA), you can only sign fields designated for your authenticated legal name.
+      </p>
+      <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl mb-4 text-xs space-y-1.5">
+        <p class="text-slate-400">Authenticated As: <b id="violation-current-user" class="text-white">...</b></p>
+        <p class="text-slate-400">Field Designated To: <b id="violation-target-signer" class="text-red-400">...</b></p>
+      </div>
+      <button id="btn-close-violation" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl transition-all">
+        Acknowledged
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= SEALED SUCCESS MODAL ================= -->
+  <div id="sealedSuccessModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center text-slate-900 border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+      <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-3xl">
+        ✓
+      </div>
+      <h3 class="text-xl font-bold text-slate-900 mb-1">Document Sealed Successfully!</h3>
+      <p class="text-xs text-slate-500 mb-4">
+        Your verified signature has been sealed into the PDF with an official cryptographic Certificate of Completion.
+      </p>
+
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-left mb-5">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Cryptographic SHA-256 Digest:</span>
+        <span id="sealed-sha256-display" class="text-[10px] font-mono text-slate-600 break-all select-all"></span>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <a id="btn-modal-download" href="#" target="_blank" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all">
+          <span>📥 Download Sealed PDF with Certificate</span>
+        </a>
+        <button id="btn-modal-go-dashboard" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+          <span>📊 View in Dashboard</span>
+        </button>
+        <button id="btn-close-sealed-modal" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all">
+          Back to Studio
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= ENVELOPE CREATED MODAL ================= -->
+  <div id="envelopeLinksModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6 text-slate-900 border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900">Envelope Dispatched & Active</h3>
+          <p class="text-xs text-slate-500">Each recipient must execute their isolated ceremony link</p>
+        </div>
+        <span class="text-xs px-2.5 py-1 bg-green-100 text-green-700 font-bold rounded-full">Active</span>
+      </div>
+
+      <div id="envelope-links-list" class="max-h-72 overflow-y-auto mb-5 space-y-3">
+        <!-- Populated via JS -->
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+        <button id="btn-env-modal-dashboard" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition-all">
+          <span>📊 Go to Dashboard</span>
+        </button>
+        <button id="btn-close-envelope-modal" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-blue-500/25 transition-all">
+          Done
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PRIVACY & SECURITY TERMS MODAL ================= -->
+  <div id="privacyTermsModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-xl p-6 text-slate-100">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <div class="flex items-center gap-2">
+          <span class="text-blue-400 text-lg">🛡️</span>
+          <h3 class="text-base font-bold text-white">Privacy & Electronic Signature Policy</h3>
+        </div>
+        <button id="btn-close-terms-modal" class="text-slate-400 hover:text-white text-lg font-bold">&times;</button>
+      </div>
+      <div class="text-xs text-slate-300 space-y-3.5 max-h-80 overflow-y-auto pr-1">
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+          <p class="font-bold text-blue-400 mb-1">1. Sole Identity Verification ("Sign Only To Your Name")</p>
+          <p class="text-slate-400 leading-relaxed">
+            By accessing this system, you agree that your digital signature constitutes a legally binding execution exclusively under your authenticated name. Signing documents under another individual's name or on fields assigned to another recipient is strictly prohibited under 18 U.S.C. § 1028 and the Uniform Electronic Transactions Act.
+          </p>
+        </div>
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+          <p class="font-bold text-emerald-400 mb-1">2. Cryptographic Integrity & Tamper-Evidence</p>
+          <p class="text-slate-400 leading-relaxed">
+            All signed documents are sealed with an irreversible SHA-256 cryptographic digest. Any alteration of the document post-execution invalidates the certificate seal.
+          </p>
+        </div>
+        <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+          <p class="font-bold text-amber-400 mb-1">3. Immutable Audit Trail</p>
+          <p class="text-slate-400 leading-relaxed">
+            Audit logs including IP addresses, authenticated timestamps, and electronic signature disclosures are embedded in the final Certificate of Completion.
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-end">
+        <button id="btn-ack-terms" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition-all">
+          I Understand & Agree
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Scripts -->
+  <script src="/static/js/signature_pad.js"></script>
+  <script src="/static/js/pdf_viewer.js"></script>
+  <script src="/static/js/field_builder.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
